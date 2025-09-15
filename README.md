@@ -1,20 +1,42 @@
 # Fiverr Conversation Extractor &nbsp;&nbsp; [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-☕-orange?style=for-the-badge)](https://www.buymeacoffee.com/theteam)
 
-A Chrome extension that extracts and saves Fiverr inbox conversations with support for attachments, replies, and markdown export. Features include batch contact fetching, conversation downloading in both markdown and json formats.
+A powerful Chrome extension that extracts and manages Fiverr inbox conversations with modern UI, comprehensive dashboard, and advanced file preview capabilities. Features dual-mode interface (popup + dashboard), batch contact fetching, conversation downloading in multiple formats, and intelligent file preview system.
 
 ![GitHub](https://img.shields.io/github/license/royal-crisis/fiverr-conversation-extractor)
 ![Chrome Web Store](https://img.shields.io/badge/Platform-Chrome-green)
 ![Tags](https://img.shields.io/badge/Tags-Chat%20Export%20%7C%20Message%20Backup%20%7C%20Conversation%20History-blue)
 
-## Key Features
+## ✨ Key Features
 
+### 🎨 **Dual Interface Modes**
+- 📱 **Popup Mode**: Quick access for simple tasks
+- 📊 **Dashboard Mode**: Full-page interface for comprehensive management
+- ⚙️ **Easy Switching**: Toggle between modes in settings
+
+### 💬 **Conversation Management**
 - 💬 Extract complete chat histories from Fiverr inbox
 - 📥 Download conversations in clean Markdown and JSON formats
 - 📱 View conversations in a dedicated tab interface
 - 📎 Download all conversation attachments
 - 📚 Track and organize conversation history
 - 💌 Support for message replies and threading
-- ⚡ Fast contact fetching
+- ⚡ Fast contact fetching with progress indicators
+
+### 🔍 **Advanced File Preview System**
+- 🖼️ **Image Preview**: JPG, PNG, GIF, BMP, WebP, SVG support
+- 📄 **PDF Viewer**: Built-in PDF viewing capabilities
+- 🎯 **3D Model Viewer**: GLB/GLTF model preview with controls
+- 📝 **Text Files**: TXT, MD, JSON, XML, CSV, LOG with syntax highlighting
+- 🎵 **Audio Player**: MP3, WAV, OGG, M4A, AAC playback
+- 🎥 **Video Player**: MP4, AVI, MOV, WMV, FLV, WebM support
+- 📦 **Archive Recognition**: ZIP, RAR, 7Z, TAR, GZ file detection
+
+### 📊 **Dashboard Features**
+- 📈 **Statistics Overview**: Contact, message, and attachment counts
+- 👥 **Contact Grid**: Visual contact cards with hover effects
+- 💬 **Conversation Analytics**: Message count, duration, file size metrics
+- 📎 **Attachment Browser**: Browse all attachments across conversations
+- 🔄 **Real-time Updates**: Live progress indicators and status updates
 
 ## Why Use This Extension?
 
@@ -24,13 +46,23 @@ A Chrome extension that extracts and saves Fiverr inbox conversations with suppo
 - 📱 **Accessibility**: Access your conversations offline and across devices
 - 🎯 **Freelancer Focused**: Specifically designed for Fiverr freelancers' needs
 
-## Advanced Features
+## 🎨 Modern UI Features
+
+- 🌈 **Modern Design**: Gradient backgrounds, smooth animations, and professional styling
+- 📱 **Responsive Layout**: Optimized for all screen sizes and devices
+- ⚡ **Interactive Elements**: Hover effects, smooth transitions, and visual feedback
+- 🎯 **Accessibility**: Focus states, keyboard navigation, and high contrast support
+- 🔄 **Loading States**: Animated spinners, progress bars, and status indicators
+- 🎨 **Customizable Settings**: Date format preferences and display mode selection
+
+## 🔧 Advanced Features
 
 - 🔍 **Smart Search**: Find conversations by keyword, date, or client
 - 📋 **Rich Text Support**: Preserves formatting, links, and emoji
-- 🔄 **Auto-Sync**: Keep your conversation backups up to date
-- 📊 **Analytics Ready**: Export in formats suitable for analysis
-- 🎨 **Custom Formatting**: Choose how your exports look
+- 🔄 **Real-time Updates**: Live progress tracking and status updates
+- 📊 **Analytics Dashboard**: Comprehensive statistics and conversation metrics
+- 🎨 **Custom Formatting**: Multiple date formats and export options
+- 📁 **Organized Downloads**: Automatic folder structure for easy file management
 
 ## Download Organization
 
@@ -73,16 +105,34 @@ This structure keeps all files related to a specific contact organized in their 
 3. Enable "Developer mode" in the top right
 4. Click "Load unpacked" and select the extension directory
 
-## Usage
+## 🚀 Usage
 
+### **Popup Mode (Quick Access)**
 1. Open your Fiverr inbox
-2. Click the extension icon
-3. Either:
-   - Click "Fetch All Contacts" to see all your conversations
-   - Click "Extract Conversation" when viewing a specific conversation
-4. Use the download button (📥) to save the conversation
-5. Use the view button (📄) to open the conversation in a new tab
-6. Click attachment buttons to download specific files
+2. Click the extension icon in your browser toolbar
+3. Choose your action:
+   - Click "📞 Fetch All Contacts" to see all your conversations
+   - Click "💬 Extract Conversation" when viewing a specific conversation
+   - Click "📊 Open Dashboard" for full-page interface
+4. Use download/view buttons to save or preview conversations
+5. Click attachment preview/download buttons for files
+
+### **Dashboard Mode (Comprehensive Management)**
+1. Click "📊 Open Dashboard" from popup or access directly
+2. Navigate between tabs:
+   - **📊 Overview**: See statistics and quick actions
+   - **👥 Contacts**: Manage all contacts in visual grid
+   - **💬 Conversations**: View and export conversation data
+   - **📎 Attachments**: Browse and preview all attachments
+3. Use contact cards to extract conversations
+4. Preview files before downloading
+5. Export conversations in multiple formats
+
+### **File Preview Features**
+- Click "👁️ Preview" on any attachment to view it inline
+- Supported formats: Images, PDFs, 3D models, text files, audio, video
+- Download files directly from preview modal
+- Archive files show helpful information about contents
 
 ## Preview
 
