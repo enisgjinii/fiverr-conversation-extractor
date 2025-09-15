@@ -1356,8 +1356,10 @@ function initializeTabNavigation() {
       if (targetPanel) {
         targetPanel.classList.add('active');
         console.log('Switched to tab:', targetTab);
+        updateStatus(`Switched to ${targetTab} tab`, 'success');
       } else {
         console.error('Target panel not found:', `${targetTab}-tab`);
+        updateStatus(`Error: ${targetTab} tab not found`, 'error');
       }
       
       // Load data for the tab if needed
