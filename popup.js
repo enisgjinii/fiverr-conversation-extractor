@@ -12,6 +12,8 @@ if (typeof CONFIG !== 'undefined') {
 // Debug: Log API configuration (remove in production)
 console.log('GROQ API Key configured:', GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE' ? 'Yes' : 'No');
 console.log('GROQ API URL:', GROQ_API_URL);
+console.log('CONFIG object available:', typeof CONFIG !== 'undefined');
+console.log('Current API Key value:', GROQ_API_KEY);
 
 // Import formatDate function from content.js
 async function formatDate(timestamp) {
@@ -701,6 +703,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize post-extraction actions
   initializePostExtractionActions();
+  
+  // Check AI configuration
+  checkAIConfiguration();
 });
 
 // Handle messages from content script
@@ -948,7 +953,7 @@ async function analyzeConversationWithAI(conversationData) {
     console.log('API Key available:', GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE');
     
     if (!GROQ_API_KEY || GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
-      throw new Error('GROQ API key not configured. Please set up your API key in config.js');
+      throw new Error('GROQ API key not configured. Please create config.js from config.example.js and add your API key.');
     }
 
     const messages = conversationData.messages || [];
@@ -1221,6 +1226,23 @@ function initializeCollapsibleSections() {
       }
     }
   });
+}
+
+// Check AI configuration
+function checkAIConfiguration() {
+  const isConfigured = GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE';
+  console.log('AI Configuration Check:', {
+    hasApiKey: !!GROQ_API_KEY,
+    isConfigured: isConfigured,
+    configLoaded: typeof CONFIG !== 'undefined',
+    apiKeyValue: GROQ_API_KEY
+  });
+  
+  if (!isConfigured) {
+    updateStatus('⚠️ AI not configured. Create config.js with your GROQ API key.', 'error');
+  }
+  
+  return isConfigured;
 }
 
 // Initialize post-extraction actions
