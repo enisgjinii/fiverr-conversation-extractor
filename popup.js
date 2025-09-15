@@ -224,9 +224,7 @@ function updateLastFetchTime() {
 // Show conversation actions
 function showConversationActions(username) {
   const actionsDiv = document.getElementById('conversationActions');
-  if (actionsDiv) {
-    actionsDiv.style.display = 'block';
-  }
+  actionsDiv.style.display = 'block';
 }
 
 // Handle conversation extraction success
@@ -571,9 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Fetch Contacts button click handler
-  const fetchContactsBtn = document.getElementById('fetchContactsBtn');
-  if (fetchContactsBtn) {
-    fetchContactsBtn.addEventListener('click', () => {
+  document.getElementById('fetchContactsBtn').addEventListener('click', () => {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       const currentUrl = tabs[0].url;
       if (!currentUrl.includes('fiverr.com')) {
@@ -591,12 +587,9 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.runtime.sendMessage({ type: 'FETCH_ALL_CONTACTS' });
     });
   });
-  }
 
   // Extract button click handler
-  const extractBtn = document.getElementById('extractBtn');
-  if (extractBtn) {
-    extractBtn.addEventListener('click', () => {
+  document.getElementById('extractBtn').addEventListener('click', () => {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       const url = tabs[0].url;
       
@@ -622,12 +615,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     });
-  }
+  });
 
   // Download button click handler
-  const downloadBtn = document.getElementById('downloadBtn');
-  if (downloadBtn) {
-    downloadBtn.addEventListener('click', () => {
+  document.getElementById('downloadBtn').addEventListener('click', () => {
     chrome.storage.local.get(['markdownContent', 'currentUsername'], function(result) {
       if (result.markdownContent && result.currentUsername) {
         const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
@@ -641,12 +632,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-  }
 
   // Open in new tab button click handler
-  const openBtn = document.getElementById('openBtn');
-  if (openBtn) {
-    openBtn.addEventListener('click', () => {
+  document.getElementById('openBtn').addEventListener('click', () => {
     chrome.storage.local.get(['markdownContent'], function(result) {
       if (result.markdownContent) {
         const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
@@ -658,9 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Download JSON button click handler
-  const downloadJsonBtn = document.getElementById('downloadJsonBtn');
-  if (downloadJsonBtn) {
-    downloadJsonBtn.addEventListener('click', () => {
+  document.getElementById('downloadJsonBtn').addEventListener('click', () => {
     chrome.storage.local.get(['jsonContent', 'currentUsername'], function(result) {
       if (result.jsonContent && result.currentUsername) {
         const blob = new Blob([JSON.stringify(result.jsonContent, null, 2)], { type: 'application/json' });
@@ -718,11 +704,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize post-extraction actions
   initializePostExtractionActions();
   
-  // Check AI configuration
-  checkAIConfiguration();
-  
   // Initialize tab navigation
   initializeTabNavigation();
+  
+  // Check AI configuration
+  checkAIConfiguration();
 });
 
 // Handle messages from content script
@@ -986,7 +972,7 @@ async function analyzeConversationWithAI(conversationData) {
       return `${msg.sender} (${timestamp}): ${msg.body || '[No text content]'}`;
     }).join('\n');
 
-    const prompt = `You are a professional communication assistant for Fiverr freelancers. Analyze this conversation and provide comprehensive insights.
+    const prompt = `You are a professional communication assistant for Fiverr freelancers. Analyze this conversation and provide comprehensive insights including response suggestions, discussed topics, and action items.
 
 Conversation:
 ${conversationText}
@@ -1014,7 +1000,14 @@ Please provide a comprehensive analysis in JSON format with this structure:
       "priority": "high/medium/low"
     }
   ]
-}`;
+}
+
+Please provide:
+1. 3 different professional response suggestions that are contextually appropriate
+2. Key topics that were discussed in the conversation
+3. Action items or next steps that the freelancer should consider
+
+Make sure the suggestions are specific to the conversation content and provide genuine value.`;
 
     console.log('Sending request to GROQ API...');
     
@@ -1063,7 +1056,7 @@ Please provide a comprehensive analysis in JSON format with this structure:
     }
     
     console.log('Parsed AI response:', suggestions);
-    
+
     // Store comprehensive analysis data
     chrome.storage.local.set({
       aiAnalysis: {
@@ -1072,7 +1065,7 @@ Please provide a comprehensive analysis in JSON format with this structure:
         todo: suggestions.todo || []
       }
     });
-    
+
     return suggestions;
     
   } catch (error) {
@@ -1146,33 +1139,32 @@ function displayAISuggestions(aiResponse) {
   const suggestions = aiResponse.suggestions || aiResponse;
   const suggestionsContainer = document.getElementById('aiSuggestions');
   const suggestionsPanel = document.getElementById('aiSuggestionsPanel');
-  
+
   if (!suggestions || suggestions.length === 0) {
     suggestionsContainer.innerHTML = '<div class="loading-suggestions">No suggestions available</div>';
-    return;
+  } else {
+    suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => `
+      <div class="suggestion-item" onclick="copySuggestion('${suggestion.response.replace(/'/g, "\\'")}')">
+        <div class="suggestion-title">${suggestion.title}</div>
+        <div class="suggestion-text">${suggestion.response}</div>
+        <div class="suggestion-meta" style="font-size: 10px; color: #666; margin-top: 4px;">
+          Tone: ${suggestion.tone} • ${suggestion.use_case}
+        </div>
+      </div>
+    `).join('');
   }
 
-  suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => `
-    <div class="suggestion-item" onclick="copySuggestion('${suggestion.response.replace(/'/g, "\\'")}')">
-      <div class="suggestion-title">${suggestion.title}</div>
-      <div class="suggestion-text">${suggestion.response}</div>
-      <div class="suggestion-meta" style="font-size: 10px; color: #666; margin-top: 4px;">
-        Tone: ${suggestion.tone} • ${suggestion.use_case}
-      </div>
-    </div>
-  `).join('');
-
-  // Show the suggestions panel
-  suggestionsPanel.style.display = 'block';
-  
   // Update discussed and todo tabs if data is available
   if (aiResponse.discussed) {
     displayDiscussedTopics(aiResponse.discussed);
   }
-  
+
   if (aiResponse.todo) {
     displayTodoItems(aiResponse.todo);
   }
+
+  // Show the suggestions panel
+  suggestionsPanel.style.display = 'block';
   
   // Auto-collapse after 10 seconds if not interacted with
   setTimeout(() => {
@@ -1180,62 +1172,6 @@ function displayAISuggestions(aiResponse) {
       collapseSuggestionsPanel();
     }
   }, 10000);
-}
-
-// Display discussed topics
-function displayDiscussedTopics(discussed) {
-  console.log('Displaying discussed topics:', discussed);
-  const discussedContent = document.getElementById('discussedContent');
-  
-  if (!discussed || discussed.length === 0) {
-    console.log('No discussed topics found, showing empty state');
-    discussedContent.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">💬</div>
-        <div class="empty-state-title">No Topics Discussed</div>
-        <div class="empty-state-description">No specific topics were identified in this conversation</div>
-      </div>
-    `;
-    return;
-  }
-
-  console.log('Rendering discussed topics:', discussed.length);
-  discussedContent.innerHTML = discussed.map(topic => `
-    <div class="topic-item">
-      <div class="topic-title">${topic.title}</div>
-      <div class="topic-description">${topic.description}</div>
-    </div>
-  `).join('');
-}
-
-// Display todo items
-function displayTodoItems(todo) {
-  console.log('Displaying todo items:', todo);
-  const todoContent = document.getElementById('todoContent');
-  
-  if (!todo || todo.length === 0) {
-    console.log('No todo items found, showing empty state');
-    todoContent.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        <div class="empty-state-title">No Action Items</div>
-        <div class="empty-state-description">No specific action items were identified from this conversation</div>
-      </div>
-    `;
-    return;
-  }
-
-  console.log('Rendering todo items:', todo.length);
-  todoContent.innerHTML = todo.map(item => `
-    <div class="todo-item priority-${item.priority || 'medium'}">
-      <div class="todo-title">${item.title}</div>
-      <div class="todo-description">${item.description}</div>
-      <div class="todo-meta">
-        <span class="todo-priority ${item.priority || 'medium'}">${(item.priority || 'medium').toUpperCase()}</span>
-        <span>Action Required</span>
-      </div>
-    </div>
-  `).join('');
 }
 
 function copySuggestion(text) {
@@ -1328,42 +1264,81 @@ function initializeCollapsibleSections() {
   });
 }
 
-// Check AI configuration
-function checkAIConfiguration() {
-  const isConfigured = GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE';
-  console.log('AI Configuration Check:', {
-    hasApiKey: !!GROQ_API_KEY,
-    isConfigured: isConfigured,
-    configLoaded: typeof CONFIG !== 'undefined',
-    apiKeyValue: GROQ_API_KEY
-  });
-  
-  if (!isConfigured) {
-    updateStatus('⚠️ AI not configured. Create config.js with your GROQ API key.', 'error');
+// Display discussed topics
+function displayDiscussedTopics(discussed) {
+  console.log('Displaying discussed topics:', discussed);
+  const discussedContent = document.getElementById('discussedContent');
+
+  if (!discussed || discussed.length === 0) {
+    console.log('No discussed topics found, showing empty state');
+    discussedContent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <div class="empty-state-title">No Topics Identified</div>
+        <div class="empty-state-description">No specific topics were identified in this conversation</div>
+      </div>
+    `;
+    return;
   }
-  
-  return isConfigured;
+
+  console.log('Rendering discussed topics:', discussed.length);
+  discussedContent.innerHTML = discussed.map(topic => `
+    <div class="topic-item">
+      <div class="topic-title">${topic.title}</div>
+      <div class="topic-description">${topic.description}</div>
+    </div>
+  `).join('');
+}
+
+// Display todo items
+function displayTodoItems(todo) {
+  console.log('Displaying todo items:', todo);
+  const todoContent = document.getElementById('todoContent');
+
+  if (!todo || todo.length === 0) {
+    console.log('No todo items found, showing empty state');
+    todoContent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">No Action Items</div>
+        <div class="empty-state-description">No specific action items were identified from this conversation</div>
+      </div>
+    `;
+    return;
+  }
+
+  console.log('Rendering todo items:', todo.length);
+  todoContent.innerHTML = todo.map(item => `
+    <div class="todo-item priority-${item.priority || 'medium'}">
+      <div class="todo-title">${item.title}</div>
+      <div class="todo-description">${item.description}</div>
+      <div class="todo-meta">
+        <span class="todo-priority ${item.priority || 'medium'}">${(item.priority || 'medium').toUpperCase()}</span>
+        <span>Action Required</span>
+      </div>
+    </div>
+  `).join('');
 }
 
 // Initialize tab navigation
 function initializeTabNavigation() {
   console.log('Initializing tab navigation...');
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabPanels = document.querySelectorAll('.tab-panel');
-  
+  const tabButtons = document.querySelectorAll('.ai-tab-btn');
+  const tabPanels = document.querySelectorAll('.ai-tab-panel');
+
   console.log('Found tab buttons:', tabButtons.length);
   console.log('Found tab panels:', tabPanels.length);
-  
+
   tabButtons.forEach((button, index) => {
     console.log(`Setting up tab button ${index}:`, button.dataset.tab);
     button.addEventListener('click', () => {
       const targetTab = button.dataset.tab;
       console.log('Tab clicked:', targetTab);
-      
+
       // Remove active class from all buttons and panels
       tabButtons.forEach(btn => btn.classList.remove('active'));
       tabPanels.forEach(panel => panel.classList.remove('active'));
-      
+
       // Add active class to clicked button and corresponding panel
       button.classList.add('active');
       const targetPanel = document.getElementById(`${targetTab}-tab`);
@@ -1375,7 +1350,7 @@ function initializeTabNavigation() {
         console.error('Target panel not found:', `${targetTab}-tab`);
         updateStatus(`Error: ${targetTab} tab not found`, 'error');
       }
-      
+
       // Load data for the tab if needed
       if (targetTab === 'discussed' || targetTab === 'todo') {
         loadTabData(targetTab);
@@ -1395,6 +1370,23 @@ function loadTabData(tabName) {
       }
     }
   });
+}
+
+// Check AI configuration
+function checkAIConfiguration() {
+  const isConfigured = GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE';
+  console.log('AI Configuration Check:', {
+    hasApiKey: !!GROQ_API_KEY,
+    isConfigured: isConfigured,
+    configLoaded: typeof CONFIG !== 'undefined',
+    apiKeyValue: GROQ_API_KEY
+  });
+  
+  if (!isConfigured) {
+    updateStatus('⚠️ AI not configured. Create config.js with your GROQ API key.', 'error');
+  }
+  
+  return isConfigured;
 }
 
 // Initialize post-extraction actions

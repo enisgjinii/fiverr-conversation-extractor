@@ -414,195 +414,166 @@
       transform: rotate(180deg);
     }
 
-    /* Tab Navigation */
-    .tab-navigation {
+    /* AI Tabs Navigation */
+    .ai-tabs {
       display: flex;
-      background: white;
-      border-radius: 10px;
-      margin: 12px 0;
+      background: #f8f9fa;
+      border-radius: 6px;
       padding: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border: 1px solid #e0e0e0;
+      margin-bottom: 12px;
+      gap: 4px;
     }
 
-    .tab-btn {
+    .ai-tab-btn {
       flex: 1;
       padding: 8px 12px;
-      background: none;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 4px;
+      background: transparent;
+      color: #666;
       font-size: 11px;
       font-weight: 600;
-      color: #666;
-      transition: all 0.3s ease;
+      cursor: pointer;
+      transition: all 0.2s ease;
       text-align: center;
     }
 
-    .tab-btn.active {
+    .ai-tab-btn.active {
       background: linear-gradient(135deg, #1dbf73 0%, #19a463 100%);
       color: white;
       box-shadow: 0 2px 4px rgba(29, 191, 115, 0.3);
     }
 
-    .tab-btn:hover:not(.active) {
-      background: #f8f9fa;
+    .ai-tab-btn:hover:not(.active) {
+      background: #e9ecef;
       color: #333;
     }
 
-    /* Tab Content */
-    .tab-content {
-      min-height: 300px;
+    .ai-tab-panels {
+      position: relative;
+      min-height: 150px;
     }
 
-    .tab-panel {
+    .ai-tab-panel {
       display: none;
       animation: fadeIn 0.3s ease-in-out;
     }
 
-    .tab-panel.active {
+    .ai-tab-panel.active {
       display: block;
     }
 
-    .tab-header {
-      text-align: center;
-      margin-bottom: 16px;
-      padding: 16px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: 10px;
-      border: 1px solid #e0e0e0;
-    }
-
-    .tab-header h3 {
-      margin: 0 0 8px 0;
-      color: #1dbf73;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .tab-subtitle {
-      margin: 0;
+    /* Topics Container */
+    .topics-container {
       font-size: 12px;
-      color: #666;
-    }
-
-    /* Discussed Content */
-    .discussed-content,
-    .todo-content {
-      padding: 12px;
     }
 
     .topic-item {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 12px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 10px 12px;
       margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+    }
+
+    .topic-item:hover {
+      background: #e9ecef;
+      border-color: #1dbf73;
+      transform: translateY(-1px);
     }
 
     .topic-title {
       font-weight: 600;
       color: #1dbf73;
       margin-bottom: 4px;
-      font-size: 13px;
+      font-size: 11px;
     }
 
     .topic-description {
-      font-size: 12px;
-      color: #666;
-      line-height: 1.4;
+      color: #495057;
+      line-height: 1.3;
+      font-size: 11px;
     }
 
-    /* Todo Items */
+    /* Actions Container */
+    .actions-container {
+      font-size: 12px;
+    }
+
     .todo-item {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 12px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 10px 12px;
       margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      position: relative;
+      transition: all 0.2s ease;
+      border-left: 4px solid #6c757d;
     }
 
     .todo-item.priority-high {
-      border-left: 4px solid #dc3545;
+      border-left-color: #dc3545;
+      background: #fff5f5;
     }
 
     .todo-item.priority-medium {
-      border-left: 4px solid #ffc107;
+      border-left-color: #ffc107;
+      background: #fffbf0;
     }
 
     .todo-item.priority-low {
-      border-left: 4px solid #28a745;
+      border-left-color: #28a745;
+      background: #f8fff8;
+    }
+
+    .todo-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .todo-title {
       font-weight: 600;
       color: #333;
       margin-bottom: 4px;
-      font-size: 13px;
+      font-size: 11px;
     }
 
     .todo-description {
-      font-size: 12px;
-      color: #666;
-      line-height: 1.4;
-      margin-bottom: 8px;
+      color: #495057;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      font-size: 11px;
     }
 
     .todo-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      color: #999;
+      font-size: 10px;
+      color: #666;
     }
 
     .todo-priority {
       padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 500;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 9px;
     }
 
     .todo-priority.high {
-      background: #ffe6e6;
-      color: #dc3545;
+      background: #dc3545;
+      color: white;
     }
 
     .todo-priority.medium {
-      background: #fff8e1;
-      color: #ffc107;
-    }
-
-    .todo-priority.low {
-      background: #e8f5e9;
-      color: #28a745;
-    }
-
-    /* Empty States */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #666;
-    }
-
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .empty-state-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
+      background: #ffc107;
       color: #333;
     }
 
-    .empty-state-description {
-      font-size: 12px;
-      line-height: 1.4;
+    .todo-priority.low {
+      background: #28a745;
+      color: white;
     }
 
     /* Post-Extraction Actions */
@@ -1214,91 +1185,54 @@
   </div>
 
   <div id="status" class="status"></div>
-
-  <!-- Tab Navigation -->
-  <div class="tab-navigation">
-    <button class="tab-btn active" data-tab="actions">🚀 Actions</button>
-    <button class="tab-btn" data-tab="discussed">💬 Discussed</button>
-    <button class="tab-btn" data-tab="todo">📋 To Do</button>
+  <!-- Conversation Actions (Collapsible) -->
+  <div class="collapsible-section" id="conversationSection" style="display: none;">
+    <div class="collapsible-header" onclick="toggleCollapsible('conversationContent')">
+      <span>💬 Conversation Actions</span>
+      <span class="collapsible-icon">▼</span>
+    </div>
+    <div class="collapsible-content" id="conversationContent">
+    <div id="currentConversation" class="current-conversation" style="display: none;"></div>
+      <div class="action-row">
+        <button id="downloadBtn" class="action-button">📥 MD</button>
+        <button id="openBtn" class="action-button">📄 View</button>
+      </div>
+      <div class="action-row">
+        <button id="downloadJsonBtn" class="action-button">📥 JSON</button>
+    <button id="viewJsonBtn" class="action-button">📄 View JSON</button>
+      </div>
+      <button id="viewAttachmentsBtn" class="action-button" style="width: 100%; margin-top: 8px;">📎 Attachments</button>
+    <div id="attachments" class="attachments-section" style="display: none;"></div>
+  </div>
+    </div>
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button id="extractBtn" class="action-button primary-btn">💬 Extract Conversation</button>
+    <div class="action-row">
+      <button id="fetchContactsBtn" class="action-button secondary-btn">📞 Contacts</button>
+      <button id="openDashboardBtn" class="action-button dashboard-btn">📊 Dashboard</button>
+    </div>
   </div>
 
-  <!-- Tab Content -->
-  <div class="tab-content">
-    <!-- Actions Tab -->
-    <div id="actions-tab" class="tab-panel active">
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <button id="extractBtn" class="action-button primary-btn">💬 Extract Conversation</button>
-        <div class="action-row">
-          <button id="fetchContactsBtn" class="action-button secondary-btn">📞 Contacts</button>
-          <button id="openDashboardBtn" class="action-button dashboard-btn">📊 Dashboard</button>
-        </div>
-      </div>
-
-      <!-- Post-Extraction Actions -->
-      <div id="postExtractionActions" class="post-extraction-actions" style="display: none;">
-        <div class="action-group">
-          <h4 class="action-group-title">🤖 AI Analysis</h4>
-          <button id="analyzeWithAI" class="action-button ai-btn">🧠 Analyze & Get Suggestions</button>
-          <button id="testAI" class="action-button" style="background: #6c757d; margin-top: 4px; font-size: 11px;">🔧 Test AI Connection</button>
-        </div>
-        <div class="action-group">
-          <h4 class="action-group-title">📥 Export Options</h4>
-          <div class="action-row">
-            <button id="downloadMarkdown" class="action-button">📄 Download MD</button>
-            <button id="downloadJson" class="action-button">📄 Download JSON</button>
-          </div>
-        </div>
-        <div class="action-group">
-          <h4 class="action-group-title">👁️ Preview Options</h4>
-          <div class="action-row">
-            <button id="viewMarkdown" class="action-button">👀 View MD</button>
-            <button id="viewJson" class="action-button">👀 View JSON</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Conversation Actions (Collapsible) -->
-      <div class="collapsible-section" id="conversationSection" style="display: none;">
-        <div class="collapsible-header" onclick="toggleCollapsible('conversationContent')">
-          <span>💬 Conversation Actions</span>
-          <span class="collapsible-icon">▼</span>
-        </div>
-        <div class="collapsible-content" id="conversationContent">
-          <div id="currentConversation" class="current-conversation" style="display: none;"></div>
-          <button id="viewAttachmentsBtn" class="action-button" style="width: 100%; margin-bottom: 8px;">📎 Attachments</button>
-          <div id="attachments" class="attachments-section" style="display: none;"></div>
-        </div>
+  <!-- Post-Extraction Actions -->
+  <div id="postExtractionActions" class="post-extraction-actions" style="display: none;">
+    <div class="action-group">
+      <h4 class="action-group-title">🤖 AI Analysis</h4>
+      <button id="analyzeWithAI" class="action-button ai-btn">🧠 Analyze & Get Suggestions</button>
+      <button id="testAI" class="action-button" style="background: #6c757d; margin-top: 4px; font-size: 11px;">🔧 Test AI Connection</button>
+    </div>
+    <div class="action-group">
+      <h4 class="action-group-title">📥 Export Options</h4>
+      <div class="action-row">
+        <button id="downloadMarkdown" class="action-button">📄 Download MD</button>
+        <button id="downloadJson" class="action-button">📄 Download JSON</button>
       </div>
     </div>
-
-    <!-- Discussed Tab -->
-    <div id="discussed-tab" class="tab-panel">
-      <div class="tab-header">
-        <h3>💬 What We Talked About</h3>
-        <p class="tab-subtitle">Key topics and discussion points from your conversation</p>
-      </div>
-      <div id="discussedContent" class="discussed-content">
-        <div class="empty-state">
-          <div class="empty-state-icon">💬</div>
-          <div class="empty-state-title">No Conversation Analyzed</div>
-          <div class="empty-state-description">Extract a conversation and run AI analysis to see discussion topics</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- To Do Tab -->
-    <div id="todo-tab" class="tab-panel">
-      <div class="tab-header">
-        <h3>📋 What I'm Going to Do</h3>
-        <p class="tab-subtitle">Action items and next steps based on the conversation</p>
-      </div>
-      <div id="todoContent" class="todo-content">
-        <div class="empty-state">
-          <div class="empty-state-icon">📋</div>
-          <div class="empty-state-title">No Action Items</div>
-          <div class="empty-state-description">Extract a conversation and run AI analysis to see action items</div>
-        </div>
+    <div class="action-group">
+      <h4 class="action-group-title">👁️ Preview Options</h4>
+      <div class="action-row">
+        <button id="viewMarkdown" class="action-button">👀 View MD</button>
+        <button id="viewJson" class="action-button">👀 View JSON</button>
       </div>
     </div>
   </div>
@@ -1306,14 +1240,49 @@
   <!-- AI Suggestions Panel -->
   <div id="aiSuggestionsPanel" class="ai-suggestions-panel" style="display: none;">
     <div class="panel-header">
-      <span class="panel-title">🤖 AI Response Suggestions</span>
+      <span class="panel-title">🤖 AI Analysis</span>
       <button id="toggleSuggestions" class="toggle-btn">−</button>
     </div>
     <div class="panel-content">
-      <div id="aiSuggestions" class="suggestions-container">
-        <div class="loading-suggestions">
-          <div class="spinner"></div>
-          Analyzing conversation...
+      <!-- Tab Navigation -->
+      <div class="ai-tabs">
+        <button class="ai-tab-btn active" data-tab="suggestions">💬 Suggestions</button>
+        <button class="ai-tab-btn" data-tab="discussed">📋 Topics</button>
+        <button class="ai-tab-btn" data-tab="todo">✅ Actions</button>
+      </div>
+      
+      <!-- Tab Panels -->
+      <div class="ai-tab-panels">
+        <!-- Suggestions Tab -->
+        <div id="suggestions-tab" class="ai-tab-panel active">
+          <div id="aiSuggestions" class="suggestions-container">
+            <div class="loading-suggestions">
+              <div class="spinner"></div>
+              Analyzing conversation...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Discussed Topics Tab -->
+        <div id="discussed-tab" class="ai-tab-panel">
+          <div id="discussedContent" class="topics-container">
+            <div class="empty-state">
+              <div class="empty-state-icon">💬</div>
+              <div class="empty-state-title">No Topics Yet</div>
+              <div class="empty-state-description">Run AI analysis to see discussed topics</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Items Tab -->
+        <div id="todo-tab" class="ai-tab-panel">
+          <div id="todoContent" class="actions-container">
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <div class="empty-state-title">No Actions Yet</div>
+              <div class="empty-state-description">Run AI analysis to see action items</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1329,8 +1298,8 @@
       <span class="collapsible-icon">▼</span>
     </div>
     <div class="collapsible-content" id="contactsContent">
-      <div id="contactsList" class="contacts-list"></div>
-    </div>
+    <div id="contactsList" class="contacts-list"></div>
+  </div>
   </div>
   <script src="config.js"></script>
   <script src="popup.js"></script>
