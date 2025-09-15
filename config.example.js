@@ -10,7 +10,7 @@ const CONFIG = {
   GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
   
   // Default model to use for AI analysis
-  DEFAULT_MODEL: 'llama-3.1-70b-versatile'
+  DEFAULT_MODEL: 'llama-3.1-8b-instant'
 };
 
 // Export for use in other files
