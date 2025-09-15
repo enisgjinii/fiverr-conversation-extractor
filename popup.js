@@ -95,9 +95,22 @@ async function displayAttachments(messages) {
             <div class="attachment-time">📅 ${timestamp}</div>
           `;
           
+          const buttonsContainer = document.createElement('div');
+          buttonsContainer.className = 'attachment-buttons';
+          buttonsContainer.style.display = 'flex';
+          buttonsContainer.style.gap = '8px';
+          buttonsContainer.style.flexDirection = 'column';
+          
+          const previewBtn = document.createElement('button');
+          previewBtn.className = 'download-btn preview-btn';
+          previewBtn.textContent = '👁️ Preview';
+          previewBtn.onclick = () => {
+            openPreview(attachment, username);
+          };
+
           const downloadBtn = document.createElement('button');
           downloadBtn.className = 'download-btn';
-          downloadBtn.textContent = 'Download';
+          downloadBtn.textContent = '📥 Download';
           downloadBtn.onclick = () => {
             chrome.downloads.download({
               url: attachment.downloadUrl,
@@ -106,8 +119,11 @@ async function displayAttachments(messages) {
             });
           };
 
+          buttonsContainer.appendChild(previewBtn);
+          buttonsContainer.appendChild(downloadBtn);
+
           attachmentDiv.appendChild(info);
-          attachmentDiv.appendChild(downloadBtn);
+          attachmentDiv.appendChild(buttonsContainer);
           attachmentsDiv.appendChild(attachmentDiv);
         }
       }
@@ -320,14 +336,20 @@ function initializeSettings() {
   const saveBtn = document.getElementById('saveBtn');
   const dateFormatSelect = document.getElementById('dateFormat');
 
-  // Load saved format from chrome.storage
-  chrome.storage.local.get(['dateFormat'], function(result) {
+  // Load saved format and display mode from chrome.storage
+  chrome.storage.local.get(['dateFormat', 'displayMode'], function(result) {
     const savedFormat = result.dateFormat || 'DD/MM/YYYY';
-    dateFormatSelect.value = savedFormat;
+    const savedMode = result.displayMode || 'popup';
     
-    // Set initial format if not already set
+    dateFormatSelect.value = savedFormat;
+    document.getElementById('displayMode').value = savedMode;
+    
+    // Set initial values if not already set
     if (!result.dateFormat) {
       chrome.storage.local.set({ dateFormat: savedFormat });
+    }
+    if (!result.displayMode) {
+      chrome.storage.local.set({ displayMode: savedMode });
     }
   });
 
@@ -408,7 +430,8 @@ function initializeSettings() {
   // Save settings
   saveBtn.addEventListener('click', async () => {
     const newFormat = dateFormatSelect.value;
-    chrome.storage.local.set({ dateFormat: newFormat }, async () => {
+    const newMode = document.getElementById('displayMode').value;
+    chrome.storage.local.set({ dateFormat: newFormat, displayMode: newMode }, async () => {
       // Refresh all displays with new format
       chrome.storage.local.get(['conversationData', 'currentUsername'], async function(result) {
         if (result.conversationData) {
@@ -620,6 +643,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize settings
   initializeSettings();
+  
+  // Initialize preview modal
+  initializePreviewModal();
+  
+  // Initialize dashboard button
+  initializeDashboardButton();
 });
 
 // Handle messages from content script
@@ -650,6 +679,215 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
   }
 });
+
+// Preview functionality
+let currentPreviewAttachment = null;
+let currentPreviewUsername = null;
+
+function openPreview(attachment, username) {
+  currentPreviewAttachment = attachment;
+  currentPreviewUsername = username;
+  
+  const previewModal = document.getElementById('previewModal');
+  const previewContainer = document.getElementById('previewContainer');
+  const previewTitle = document.querySelector('.preview-title');
+  
+  previewTitle.textContent = attachment.filename;
+  previewContainer.innerHTML = '<div class="preview-loading"><div class="spinner"></div>Loading preview...</div>';
+  
+  // Show modal
+  previewModal.style.display = 'block';
+  document.getElementById('modalBackdrop').style.display = 'block';
+  
+  // Load preview based on file type
+  loadPreview(attachment);
+}
+
+function loadPreview(attachment) {
+  const previewContainer = document.getElementById('previewContainer');
+  const fileExtension = attachment.filename.split('.').pop().toLowerCase();
+  const fileName = attachment.filename;
+  
+  // Image files
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension)) {
+    previewContainer.innerHTML = `
+      <img src="${attachment.downloadUrl}" 
+           alt="${fileName}" 
+           class="preview-image"
+           onerror="handlePreviewError('Failed to load image')"
+           onload="handlePreviewLoad()" />
+    `;
+  }
+  // PDF files
+  else if (fileExtension === 'pdf') {
+    previewContainer.innerHTML = `
+      <iframe src="${attachment.downloadUrl}#toolbar=0&navpanes=0&scrollbar=1" 
+              class="preview-pdf"
+              onerror="handlePreviewError('Failed to load PDF')"></iframe>
+    `;
+  }
+  // 3D model files (GLB, GLTF)
+  else if (['glb', 'gltf'].includes(fileExtension)) {
+    previewContainer.innerHTML = `
+      <div class="preview-3d" id="model-viewer-container">
+        <model-viewer 
+          src="${attachment.downloadUrl}" 
+          alt="${fileName}"
+          auto-rotate 
+          camera-controls
+          style="width: 100%; height: 400px; background-color: #f0f0f0;">
+        </model-viewer>
+      </div>
+      <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    `;
+  }
+  // Text files
+  else if (['txt', 'md', 'json', 'xml', 'csv', 'log'].includes(fileExtension)) {
+    fetch(attachment.downloadUrl)
+      .then(response => response.text())
+      .then(text => {
+        previewContainer.innerHTML = `
+          <div style="text-align: left; max-height: 400px; overflow-y: auto; background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0;">
+            <pre style="margin: 0; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 12px;">${escapeHtml(text)}</pre>
+          </div>
+        `;
+      })
+      .catch(() => {
+        handlePreviewError('Failed to load text file');
+      });
+  }
+  // Audio files
+  else if (['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(fileExtension)) {
+    previewContainer.innerHTML = `
+      <div class="preview-unsupported">
+        <div class="file-icon">🎵</div>
+        <h4>Audio File</h4>
+        <p>${fileName}</p>
+        <audio controls style="margin-top: 16px; width: 100%; max-width: 400px;">
+          <source src="${attachment.downloadUrl}" type="audio/${fileExtension}">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    `;
+  }
+  // Video files
+  else if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'].includes(fileExtension)) {
+    previewContainer.innerHTML = `
+      <div class="preview-unsupported">
+        <div class="file-icon">🎥</div>
+        <h4>Video File</h4>
+        <p>${fileName}</p>
+        <video controls style="margin-top: 16px; width: 100%; max-width: 500px; max-height: 300px;">
+          <source src="${attachment.downloadUrl}" type="video/${fileExtension}">
+          Your browser does not support the video element.
+        </video>
+      </div>
+    `;
+  }
+  // Archive files
+  else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(fileExtension)) {
+    previewContainer.innerHTML = `
+      <div class="preview-unsupported">
+        <div class="file-icon">📦</div>
+        <h4>Archive File</h4>
+        <p>${fileName}</p>
+        <p style="color: #666; margin-top: 16px;">Archive files cannot be previewed. Please download to extract contents.</p>
+      </div>
+    `;
+  }
+  // Unsupported files
+  else {
+    previewContainer.innerHTML = `
+      <div class="preview-unsupported">
+        <div class="file-icon">📄</div>
+        <h4>File Preview Not Available</h4>
+        <p>${fileName}</p>
+        <p style="color: #666; margin-top: 16px;">Preview is not supported for this file type. You can download the file to view it.</p>
+      </div>
+    `;
+  }
+}
+
+function handlePreviewError(message) {
+  const previewContainer = document.getElementById('previewContainer');
+  previewContainer.innerHTML = `
+    <div class="preview-error">
+      <div class="error-icon">❌</div>
+      <h4>Preview Error</h4>
+      <p>${message}</p>
+      <p style="color: #666; margin-top: 16px;">You can still download the file to view it.</p>
+    </div>
+  `;
+}
+
+function handlePreviewLoad() {
+  // Preview loaded successfully
+  console.log('Preview loaded successfully');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function closePreview() {
+  const previewModal = document.getElementById('previewModal');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  
+  previewModal.style.display = 'none';
+  modalBackdrop.style.display = 'none';
+  
+  currentPreviewAttachment = null;
+  currentPreviewUsername = null;
+}
+
+// Initialize preview modal event listeners
+function initializePreviewModal() {
+  const closePreviewBtn = document.getElementById('closePreviewBtn');
+  const closePreviewBtn2 = document.getElementById('closePreviewBtn2');
+  const downloadFromPreviewBtn = document.getElementById('downloadFromPreviewBtn');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+
+  // Close preview modal
+  closePreviewBtn.addEventListener('click', closePreview);
+  closePreviewBtn2.addEventListener('click', closePreview);
+  
+  // Close on backdrop click
+  modalBackdrop.addEventListener('click', closePreview);
+
+  // Download from preview
+  downloadFromPreviewBtn.addEventListener('click', () => {
+    if (currentPreviewAttachment && currentPreviewUsername) {
+      chrome.downloads.download({
+        url: currentPreviewAttachment.downloadUrl,
+        filename: `${currentPreviewUsername}/attachments/${currentPreviewAttachment.filename}`,
+        saveAs: false
+      });
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const previewModal = document.getElementById('previewModal');
+      if (previewModal.style.display === 'block') {
+        closePreview();
+      }
+    }
+  });
+}
+
+// Initialize dashboard button functionality
+function initializeDashboardButton() {
+  const openDashboardBtn = document.getElementById('openDashboardBtn');
+  
+  if (openDashboardBtn) {
+    openDashboardBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+    });
+  }
+}
 
 // Stop checking when popup closes
 window.addEventListener('unload', () => {
