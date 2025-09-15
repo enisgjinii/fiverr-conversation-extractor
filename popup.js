@@ -222,7 +222,7 @@ function showConversationActions(username) {
 }
 
 // Handle conversation extraction success
-async function handleConversationExtracted(data, message) {
+function handleConversationExtracted(data, message) {
   updateStatus(message || 'Conversation extracted successfully!');
   
   // Extract username from message
@@ -276,19 +276,17 @@ async function handleConversationExtracted(data, message) {
     }
   }
 
-  // Start AI Analysis
-  if (data && data.messages && data.messages.length > 0) {
-    updateStatus('Analyzing conversation with AI...', 'progress');
-    
-    try {
-      const suggestions = await analyzeConversationWithAI(data);
-      displayAISuggestions(suggestions);
-      updateStatus('AI analysis complete! Check suggestions below.', 'success');
-    } catch (error) {
-      console.error('AI Analysis failed:', error);
-      updateStatus('Conversation extracted, but AI analysis failed.', 'error');
-    }
+  // Show post-extraction actions
+  const postExtractionActions = document.getElementById('postExtractionActions');
+  if (postExtractionActions) {
+    postExtractionActions.style.display = 'block';
   }
+
+  // Store conversation data for later use
+  chrome.storage.local.set({ 
+    lastExtractedData: data,
+    conversationReady: true
+  });
 }
 
 // Add status checking functionality
@@ -540,16 +538,26 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Load current conversation if exists
-  chrome.storage.local.get(['currentConversationUsername', 'lastExtractedTime'], function(result) {
+  chrome.storage.local.get(['currentConversationUsername', 'lastExtractedTime', 'conversationReady'], function(result) {
     if (result.currentConversationUsername) {
       const currentConversationDiv = document.getElementById('currentConversation');
       if (currentConversationDiv) {
         currentConversationDiv.textContent = `Conversation with ${result.currentConversationUsername}`;
         currentConversationDiv.style.display = 'block';
         
-        // Show conversation actions
-        const actionsDiv = document.getElementById('conversationActions');
-        actionsDiv.style.display = 'block';
+        // Show conversation actions (now collapsible)
+        const conversationSection = document.getElementById('conversationSection');
+        if (conversationSection) {
+          conversationSection.style.display = 'block';
+        }
+      }
+    }
+    
+    // Show post-extraction actions if conversation is ready
+    if (result.conversationReady) {
+      const postExtractionActions = document.getElementById('postExtractionActions');
+      if (postExtractionActions) {
+        postExtractionActions.style.display = 'block';
       }
     }
   });
@@ -686,6 +694,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize collapsible sections
   initializeCollapsibleSections();
+  
+  // Initialize post-extraction actions
+  initializePostExtractionActions();
 });
 
 // Handle messages from content script
@@ -1138,6 +1149,65 @@ function initializeCollapsibleSections() {
       }
     }
   });
+}
+
+// Initialize post-extraction actions
+function initializePostExtractionActions() {
+  // AI Analysis button
+  const analyzeBtn = document.getElementById('analyzeWithAI');
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', async () => {
+      chrome.storage.local.get(['lastExtractedData'], async (result) => {
+        if (!result.lastExtractedData || !result.lastExtractedData.messages) {
+          updateStatus('No conversation data available for analysis.', 'error');
+          return;
+        }
+
+        updateStatus('Analyzing conversation with AI...', 'progress');
+        
+        try {
+          const suggestions = await analyzeConversationWithAI(result.lastExtractedData);
+          displayAISuggestions(suggestions);
+          updateStatus('AI analysis complete! Check suggestions below.', 'success');
+        } catch (error) {
+          console.error('AI Analysis failed:', error);
+          updateStatus('AI analysis failed. Please try again.', 'error');
+        }
+      });
+    });
+  }
+
+  // Download Markdown button
+  const downloadMarkdownBtn = document.getElementById('downloadMarkdown');
+  if (downloadMarkdownBtn) {
+    downloadMarkdownBtn.addEventListener('click', () => {
+      downloadMarkdown();
+    });
+  }
+
+  // Download JSON button
+  const downloadJsonBtn = document.getElementById('downloadJson');
+  if (downloadJsonBtn) {
+    downloadJsonBtn.addEventListener('click', () => {
+      downloadJson();
+    });
+  }
+
+  // View Markdown button
+  const viewMarkdownBtn = document.getElementById('viewMarkdown');
+  if (viewMarkdownBtn) {
+    viewMarkdownBtn.addEventListener('click', () => {
+      viewMarkdown();
+    });
+  }
+
+  // View JSON button
+  const viewJsonBtn = document.getElementById('viewJson');
+  if (viewJsonBtn) {
+    viewJsonBtn.addEventListener('click', () => {
+      viewJson();
+    });
+  }
 }
 
 // Stop checking when popup closes

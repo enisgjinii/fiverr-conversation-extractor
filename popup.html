@@ -413,6 +413,46 @@
     .collapsible-icon.expanded {
       transform: rotate(180deg);
     }
+
+    /* Post-Extraction Actions */
+    .post-extraction-actions {
+      margin: 12px 0;
+      padding: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 10px;
+      border: 2px solid #1dbf73;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .action-group {
+      margin-bottom: 16px;
+    }
+
+    .action-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .action-group-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1dbf73;
+      margin-bottom: 8px;
+      text-align: center;
+      padding: 4px 8px;
+      background: rgba(29, 191, 115, 0.1);
+      border-radius: 6px;
+    }
+
+    .ai-btn {
+      background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+      box-shadow: 0 2px 4px rgba(111, 66, 193, 0.3) !important;
+      width: 100%;
+    }
+
+    .ai-btn:hover {
+      background: linear-gradient(135deg, #5a32a3 0%, #4c2a8a 100%) !important;
+      box-shadow: 0 4px 8px rgba(111, 66, 193, 0.4) !important;
+    }
     .attachment-list {
       margin: 10px 0;
       padding: 10px;
@@ -1005,10 +1045,32 @@
   </div>
   <!-- Quick Actions -->
   <div class="quick-actions">
-    <button id="extractBtn" class="action-button primary-btn">💬 Extract & Analyze</button>
+    <button id="extractBtn" class="action-button primary-btn">💬 Extract Conversation</button>
     <div class="action-row">
       <button id="fetchContactsBtn" class="action-button secondary-btn">📞 Contacts</button>
       <button id="openDashboardBtn" class="action-button dashboard-btn">📊 Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Post-Extraction Actions -->
+  <div id="postExtractionActions" class="post-extraction-actions" style="display: none;">
+    <div class="action-group">
+      <h4 class="action-group-title">🤖 AI Analysis</h4>
+      <button id="analyzeWithAI" class="action-button ai-btn">🧠 Analyze & Get Suggestions</button>
+    </div>
+    <div class="action-group">
+      <h4 class="action-group-title">📥 Export Options</h4>
+      <div class="action-row">
+        <button id="downloadMarkdown" class="action-button">📄 Download MD</button>
+        <button id="downloadJson" class="action-button">📄 Download JSON</button>
+      </div>
+    </div>
+    <div class="action-group">
+      <h4 class="action-group-title">👁️ Preview Options</h4>
+      <div class="action-row">
+        <button id="viewMarkdown" class="action-button">👀 View MD</button>
+        <button id="viewJson" class="action-button">👀 View JSON</button>
+      </div>
     </div>
   </div>
 
