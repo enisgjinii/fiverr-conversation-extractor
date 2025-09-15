@@ -1170,9 +1170,11 @@ function displayAISuggestions(aiResponse) {
 
 // Display discussed topics
 function displayDiscussedTopics(discussed) {
+  console.log('Displaying discussed topics:', discussed);
   const discussedContent = document.getElementById('discussedContent');
   
   if (!discussed || discussed.length === 0) {
+    console.log('No discussed topics found, showing empty state');
     discussedContent.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">💬</div>
@@ -1183,6 +1185,7 @@ function displayDiscussedTopics(discussed) {
     return;
   }
 
+  console.log('Rendering discussed topics:', discussed.length);
   discussedContent.innerHTML = discussed.map(topic => `
     <div class="topic-item">
       <div class="topic-title">${topic.title}</div>
@@ -1193,9 +1196,11 @@ function displayDiscussedTopics(discussed) {
 
 // Display todo items
 function displayTodoItems(todo) {
+  console.log('Displaying todo items:', todo);
   const todoContent = document.getElementById('todoContent');
   
   if (!todo || todo.length === 0) {
+    console.log('No todo items found, showing empty state');
     todoContent.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">📋</div>
@@ -1206,6 +1211,7 @@ function displayTodoItems(todo) {
     return;
   }
 
+  console.log('Rendering todo items:', todo.length);
   todoContent.innerHTML = todo.map(item => `
     <div class="todo-item priority-${item.priority || 'medium'}">
       <div class="todo-title">${item.title}</div>
@@ -1327,12 +1333,18 @@ function checkAIConfiguration() {
 
 // Initialize tab navigation
 function initializeTabNavigation() {
+  console.log('Initializing tab navigation...');
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabPanels = document.querySelectorAll('.tab-panel');
   
-  tabButtons.forEach(button => {
+  console.log('Found tab buttons:', tabButtons.length);
+  console.log('Found tab panels:', tabPanels.length);
+  
+  tabButtons.forEach((button, index) => {
+    console.log(`Setting up tab button ${index}:`, button.dataset.tab);
     button.addEventListener('click', () => {
       const targetTab = button.dataset.tab;
+      console.log('Tab clicked:', targetTab);
       
       // Remove active class from all buttons and panels
       tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -1340,7 +1352,13 @@ function initializeTabNavigation() {
       
       // Add active class to clicked button and corresponding panel
       button.classList.add('active');
-      document.getElementById(`${targetTab}-tab`).classList.add('active');
+      const targetPanel = document.getElementById(`${targetTab}-tab`);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+        console.log('Switched to tab:', targetTab);
+      } else {
+        console.error('Target panel not found:', `${targetTab}-tab`);
+      }
       
       // Load data for the tab if needed
       if (targetTab === 'discussed' || targetTab === 'todo') {
