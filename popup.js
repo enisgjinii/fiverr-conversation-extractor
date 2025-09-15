@@ -706,6 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Check AI configuration
   checkAIConfiguration();
+  
+  // Initialize tab navigation
+  initializeTabNavigation();
 });
 
 // Handle messages from content script
@@ -969,19 +972,12 @@ async function analyzeConversationWithAI(conversationData) {
       return `${msg.sender} (${timestamp}): ${msg.body || '[No text content]'}`;
     }).join('\n');
 
-    const prompt = `You are a professional communication assistant for Fiverr freelancers. Analyze this conversation and provide 3 professional response suggestions for the freelancer.
+    const prompt = `You are a professional communication assistant for Fiverr freelancers. Analyze this conversation and provide comprehensive insights.
 
 Conversation:
 ${conversationText}
 
-Please provide 3 different professional response suggestions that:
-1. Are appropriate for the conversation context
-2. Maintain professional tone
-3. Are helpful and constructive
-4. Consider the client's needs and concerns
-5. Show expertise and reliability
-
-Format your response as JSON with this structure:
+Please provide a comprehensive analysis in JSON format with this structure:
 {
   "suggestions": [
     {
@@ -989,6 +985,19 @@ Format your response as JSON with this structure:
       "response": "The actual response text",
       "tone": "professional/helpful/empathetic/etc",
       "use_case": "When to use this response"
+    }
+  ],
+  "discussed": [
+    {
+      "title": "Topic discussed",
+      "description": "What was talked about regarding this topic"
+    }
+  ],
+  "todo": [
+    {
+      "title": "Action item",
+      "description": "What needs to be done",
+      "priority": "high/medium/low"
     }
   ]
 }`;
@@ -1039,8 +1048,18 @@ Format your response as JSON with this structure:
       suggestions = extractSuggestionsFromText(aiResponse);
     }
     
-    console.log('Parsed suggestions:', suggestions);
-    return suggestions.suggestions || suggestions || [];
+    console.log('Parsed AI response:', suggestions);
+    
+    // Store comprehensive analysis data
+    chrome.storage.local.set({
+      aiAnalysis: {
+        suggestions: suggestions.suggestions || [],
+        discussed: suggestions.discussed || [],
+        todo: suggestions.todo || []
+      }
+    });
+    
+    return suggestions;
     
   } catch (error) {
     console.error('AI Analysis Error:', error);
@@ -1108,7 +1127,9 @@ function extractSuggestionsFromText(text) {
   return { suggestions };
 }
 
-function displayAISuggestions(suggestions) {
+function displayAISuggestions(aiResponse) {
+  // Handle both old format (array of suggestions) and new format (comprehensive object)
+  const suggestions = aiResponse.suggestions || aiResponse;
   const suggestionsContainer = document.getElementById('aiSuggestions');
   const suggestionsPanel = document.getElementById('aiSuggestionsPanel');
   
@@ -1130,12 +1151,71 @@ function displayAISuggestions(suggestions) {
   // Show the suggestions panel
   suggestionsPanel.style.display = 'block';
   
+  // Update discussed and todo tabs if data is available
+  if (aiResponse.discussed) {
+    displayDiscussedTopics(aiResponse.discussed);
+  }
+  
+  if (aiResponse.todo) {
+    displayTodoItems(aiResponse.todo);
+  }
+  
   // Auto-collapse after 10 seconds if not interacted with
   setTimeout(() => {
     if (!suggestionsPanel.classList.contains('user-interacted')) {
       collapseSuggestionsPanel();
     }
   }, 10000);
+}
+
+// Display discussed topics
+function displayDiscussedTopics(discussed) {
+  const discussedContent = document.getElementById('discussedContent');
+  
+  if (!discussed || discussed.length === 0) {
+    discussedContent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <div class="empty-state-title">No Topics Discussed</div>
+        <div class="empty-state-description">No specific topics were identified in this conversation</div>
+      </div>
+    `;
+    return;
+  }
+
+  discussedContent.innerHTML = discussed.map(topic => `
+    <div class="topic-item">
+      <div class="topic-title">${topic.title}</div>
+      <div class="topic-description">${topic.description}</div>
+    </div>
+  `).join('');
+}
+
+// Display todo items
+function displayTodoItems(todo) {
+  const todoContent = document.getElementById('todoContent');
+  
+  if (!todo || todo.length === 0) {
+    todoContent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">No Action Items</div>
+        <div class="empty-state-description">No specific action items were identified from this conversation</div>
+      </div>
+    `;
+    return;
+  }
+
+  todoContent.innerHTML = todo.map(item => `
+    <div class="todo-item priority-${item.priority || 'medium'}">
+      <div class="todo-title">${item.title}</div>
+      <div class="todo-description">${item.description}</div>
+      <div class="todo-meta">
+        <span class="todo-priority ${item.priority || 'medium'}">${(item.priority || 'medium').toUpperCase()}</span>
+        <span>Action Required</span>
+      </div>
+    </div>
+  `).join('');
 }
 
 function copySuggestion(text) {
@@ -1243,6 +1323,44 @@ function checkAIConfiguration() {
   }
   
   return isConfigured;
+}
+
+// Initialize tab navigation
+function initializeTabNavigation() {
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.dataset.tab;
+      
+      // Remove active class from all buttons and panels
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabPanels.forEach(panel => panel.classList.remove('active'));
+      
+      // Add active class to clicked button and corresponding panel
+      button.classList.add('active');
+      document.getElementById(`${targetTab}-tab`).classList.add('active');
+      
+      // Load data for the tab if needed
+      if (targetTab === 'discussed' || targetTab === 'todo') {
+        loadTabData(targetTab);
+      }
+    });
+  });
+}
+
+// Load data for specific tabs
+function loadTabData(tabName) {
+  chrome.storage.local.get(['aiAnalysis'], (result) => {
+    if (result.aiAnalysis) {
+      if (tabName === 'discussed' && result.aiAnalysis.discussed) {
+        displayDiscussedTopics(result.aiAnalysis.discussed);
+      } else if (tabName === 'todo' && result.aiAnalysis.todo) {
+        displayTodoItems(result.aiAnalysis.todo);
+      }
+    }
+  });
 }
 
 // Initialize post-extraction actions
