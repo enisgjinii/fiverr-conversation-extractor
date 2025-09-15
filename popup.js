@@ -224,7 +224,9 @@ function updateLastFetchTime() {
 // Show conversation actions
 function showConversationActions(username) {
   const actionsDiv = document.getElementById('conversationActions');
-  actionsDiv.style.display = 'block';
+  if (actionsDiv) {
+    actionsDiv.style.display = 'block';
+  }
 }
 
 // Handle conversation extraction success
@@ -569,7 +571,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Fetch Contacts button click handler
-  document.getElementById('fetchContactsBtn').addEventListener('click', () => {
+  const fetchContactsBtn = document.getElementById('fetchContactsBtn');
+  if (fetchContactsBtn) {
+    fetchContactsBtn.addEventListener('click', () => {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       const currentUrl = tabs[0].url;
       if (!currentUrl.includes('fiverr.com')) {
@@ -587,9 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.runtime.sendMessage({ type: 'FETCH_ALL_CONTACTS' });
     });
   });
+  }
 
   // Extract button click handler
-  document.getElementById('extractBtn').addEventListener('click', () => {
+  const extractBtn = document.getElementById('extractBtn');
+  if (extractBtn) {
+    extractBtn.addEventListener('click', () => {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       const url = tabs[0].url;
       
@@ -615,10 +622,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     });
-  });
+  }
 
   // Download button click handler
-  document.getElementById('downloadBtn').addEventListener('click', () => {
+  const downloadBtn = document.getElementById('downloadBtn');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
     chrome.storage.local.get(['markdownContent', 'currentUsername'], function(result) {
       if (result.markdownContent && result.currentUsername) {
         const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
@@ -632,9 +641,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+  }
 
   // Open in new tab button click handler
-  document.getElementById('openBtn').addEventListener('click', () => {
+  const openBtn = document.getElementById('openBtn');
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
     chrome.storage.local.get(['markdownContent'], function(result) {
       if (result.markdownContent) {
         const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
@@ -646,7 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Download JSON button click handler
-  document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+  const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+  if (downloadJsonBtn) {
+    downloadJsonBtn.addEventListener('click', () => {
     chrome.storage.local.get(['jsonContent', 'currentUsername'], function(result) {
       if (result.jsonContent && result.currentUsername) {
         const blob = new Blob([JSON.stringify(result.jsonContent, null, 2)], { type: 'application/json' });
