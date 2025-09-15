@@ -9,6 +9,10 @@ if (typeof CONFIG !== 'undefined') {
   GROQ_API_URL = CONFIG.GROQ_API_URL || GROQ_API_URL;
 }
 
+// Debug: Log API configuration (remove in production)
+console.log('GROQ API Key configured:', GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE' ? 'Yes' : 'No');
+console.log('GROQ API URL:', GROQ_API_URL);
+
 // Import formatDate function from content.js
 async function formatDate(timestamp) {
   const date = new Date(parseInt(timestamp));
@@ -940,10 +944,19 @@ function initializeDashboardButton() {
 // AI Analysis Functions
 async function analyzeConversationWithAI(conversationData) {
   try {
+    console.log('Starting AI analysis...');
+    console.log('API Key available:', GROQ_API_KEY && GROQ_API_KEY !== 'YOUR_GROQ_API_KEY_HERE');
+    
+    if (!GROQ_API_KEY || GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
+      throw new Error('GROQ API key not configured. Please set up your API key in config.js');
+    }
+
     const messages = conversationData.messages || [];
     if (messages.length === 0) {
       throw new Error('No messages to analyze');
     }
+
+    console.log(`Analyzing ${messages.length} messages...`);
 
     // Prepare conversation context for AI
     const conversationText = messages.map(msg => {
@@ -975,6 +988,8 @@ Format your response as JSON with this structure:
   ]
 }`;
 
+    console.log('Sending request to GROQ API...');
+    
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
@@ -994,19 +1009,38 @@ Format your response as JSON with this structure:
       })
     });
 
+    console.log('API Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('API Response received:', data);
+    
     const aiResponse = data.choices[0].message.content;
+    console.log('AI Response content:', aiResponse);
     
     // Parse the JSON response
-    const suggestions = JSON.parse(aiResponse);
-    return suggestions.suggestions || [];
+    let suggestions;
+    try {
+      suggestions = JSON.parse(aiResponse);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError);
+      console.log('Raw AI response:', aiResponse);
+      // Try to extract suggestions from the text if JSON parsing fails
+      suggestions = extractSuggestionsFromText(aiResponse);
+    }
+    
+    console.log('Parsed suggestions:', suggestions);
+    return suggestions.suggestions || suggestions || [];
     
   } catch (error) {
     console.error('AI Analysis Error:', error);
+    updateStatus(`AI Analysis failed: ${error.message}`, 'error');
+    
     // Return fallback suggestions
     return [
       {
@@ -1029,6 +1063,44 @@ Format your response as JSON with this structure:
       }
     ];
   }
+}
+
+// Helper function to extract suggestions from text if JSON parsing fails
+function extractSuggestionsFromText(text) {
+  const suggestions = [];
+  const lines = text.split('\n');
+  let currentSuggestion = {};
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (line.includes('title') || line.includes('Title')) {
+      currentSuggestion.title = line.replace(/['"]/g, '').split(':')[1]?.trim() || 'Suggestion';
+    } else if (line.includes('response') || line.includes('Response')) {
+      currentSuggestion.response = line.replace(/['"]/g, '').split(':')[1]?.trim() || line;
+    } else if (line.includes('tone') || line.includes('Tone')) {
+      currentSuggestion.tone = line.replace(/['"]/g, '').split(':')[1]?.trim() || 'professional';
+    } else if (line.includes('use_case') || line.includes('Use case')) {
+      currentSuggestion.use_case = line.replace(/['"]/g, '').split(':')[1]?.trim() || 'General use';
+      suggestions.push({...currentSuggestion});
+      currentSuggestion = {};
+    }
+  }
+  
+  // If we didn't find structured suggestions, create generic ones from the text
+  if (suggestions.length === 0) {
+    const paragraphs = text.split('\n\n').filter(p => p.trim().length > 20);
+    paragraphs.slice(0, 3).forEach((paragraph, index) => {
+      suggestions.push({
+        title: `Suggestion ${index + 1}`,
+        response: paragraph.trim(),
+        tone: 'professional',
+        use_case: 'Based on conversation context'
+      });
+    });
+  }
+  
+  return { suggestions };
 }
 
 function displayAISuggestions(suggestions) {
@@ -1174,6 +1246,45 @@ function initializePostExtractionActions() {
           updateStatus('AI analysis failed. Please try again.', 'error');
         }
       });
+    });
+  }
+
+  // Test AI button
+  const testAIBtn = document.getElementById('testAI');
+  if (testAIBtn) {
+    testAIBtn.addEventListener('click', async () => {
+      updateStatus('Testing AI connection...', 'progress');
+      
+      try {
+        // Test with a simple conversation
+        const testData = {
+          messages: [
+            {
+              sender: "Client",
+              body: "Hi, I need help with my project. Can you help me?",
+              createdAt: Date.now() - 3600000
+            },
+            {
+              sender: "You",
+              body: "Hello! I'd be happy to help. What kind of project are you working on?",
+              createdAt: Date.now() - 1800000
+            }
+          ]
+        };
+        
+        console.log('Testing AI with sample data...');
+        const suggestions = await analyzeConversationWithAI(testData);
+        
+        if (suggestions && suggestions.length > 0) {
+          updateStatus('✅ AI connection successful!', 'success');
+          displayAISuggestions(suggestions);
+        } else {
+          updateStatus('❌ AI test failed - no suggestions returned', 'error');
+        }
+      } catch (error) {
+        console.error('AI Test failed:', error);
+        updateStatus(`❌ AI test failed: ${error.message}`, 'error');
+      }
     });
   }
 
