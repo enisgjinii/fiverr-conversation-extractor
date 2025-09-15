@@ -101,9 +101,32 @@ This structure keeps all files related to a specific contact organized in their 
 ## Installation
 
 1. Clone this repository or download the ZIP file
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the extension directory
+2. **Set up GROQ API Key** (for AI features):
+   - Copy `config.example.js` to `config.js`
+   - Get your API key from [GROQ Console](https://console.groq.com/keys)
+   - Replace `YOUR_GROQ_API_KEY_HERE` in `config.js` with your actual API key
+3. Open Chrome and go to `chrome://extensions/`
+4. Enable "Developer mode" in the top right
+5. Click "Load unpacked" and select the extension directory
+
+### 🤖 AI Features Setup
+
+To enable AI-powered conversation analysis and response suggestions:
+
+1. **Get GROQ API Key**: 
+   - Visit [GROQ Console](https://console.groq.com/keys)
+   - Sign up for a free account
+   - Generate a new API key
+
+2. **Configure Extension**:
+   - Copy `config.example.js` to `config.js` in the extension directory
+   - Open `config.js` and replace `YOUR_GROQ_API_KEY_HERE` with your actual API key
+
+3. **Reload Extension**:
+   - Go to `chrome://extensions/`
+   - Click the reload button on the Fiverr Conversation Extractor extension
+
+**Note**: AI features are optional. The extension works perfectly without the API key, but you won't get AI-powered response suggestions.
 
 ## 🚀 Usage
 

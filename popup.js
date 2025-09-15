@@ -1,3 +1,14 @@
+// GROQ API Configuration
+// Load config from config.js (create from config.example.js)
+let GROQ_API_KEY = 'YOUR_GROQ_API_KEY_HERE';
+let GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Try to load config from external file
+if (typeof CONFIG !== 'undefined') {
+  GROQ_API_KEY = CONFIG.GROQ_API_KEY || GROQ_API_KEY;
+  GROQ_API_URL = CONFIG.GROQ_API_URL || GROQ_API_URL;
+}
+
 // Import formatDate function from content.js
 async function formatDate(timestamp) {
   const date = new Date(parseInt(timestamp));
@@ -59,14 +70,18 @@ function addLogEntry(message, isError = false) {
 // Update contact counter
 function updateContactCounter(count) {
   const contactCount = document.getElementById('contactCount');
+  const contactCountDisplay = document.getElementById('contactCountDisplay');
   const progressCounter = document.getElementById('progressCounter');
-  if (contactCount && progressCounter) {
-    contactCount.textContent = count;
+  
+  if (contactCount) contactCount.textContent = count;
+  if (contactCountDisplay) contactCountDisplay.textContent = count;
+  
+  if (progressCounter) {
     progressCounter.style.display = 'block';
-    
-    // Update storage with latest count
-    chrome.storage.local.set({ lastContactCount: count });
   }
+  
+  // Update storage with latest count
+  chrome.storage.local.set({ lastContactCount: count });
 }
 
 // Display attachments in popup
@@ -207,7 +222,7 @@ function showConversationActions(username) {
 }
 
 // Handle conversation extraction success
-function handleConversationExtracted(data, message) {
+async function handleConversationExtracted(data, message) {
   updateStatus(message || 'Conversation extracted successfully!');
   
   // Extract username from message
@@ -227,9 +242,11 @@ function handleConversationExtracted(data, message) {
     });
   }
   
-  // Show conversation actions
-  const actionsDiv = document.getElementById('conversationActions');
-  actionsDiv.style.display = 'block';
+  // Show conversation actions (now collapsible)
+  const conversationSection = document.getElementById('conversationSection');
+  if (conversationSection) {
+    conversationSection.style.display = 'block';
+  }
 
   // Display attachments using the displayAttachments function
   if (data && data.messages) {
@@ -249,13 +266,27 @@ function handleConversationExtracted(data, message) {
         const isVisible = attachmentsDiv.style.display === 'block';
         attachmentsDiv.style.display = isVisible ? 'none' : 'block';
         viewAttachmentsBtn.textContent = isVisible 
-            ? `📎 View Attachments (${totalAttachments})` 
+            ? `📎 Attachments (${totalAttachments})` 
             : `📎 Hide Attachments (${totalAttachments})`;
       };
       // Set initial button text with attachment count
-      viewAttachmentsBtn.textContent = `📎 View Attachments (${totalAttachments})`;
+      viewAttachmentsBtn.textContent = `📎 Attachments (${totalAttachments})`;
     } else {
       viewAttachmentsBtn.style.display = 'none';
+    }
+  }
+
+  // Start AI Analysis
+  if (data && data.messages && data.messages.length > 0) {
+    updateStatus('Analyzing conversation with AI...', 'progress');
+    
+    try {
+      const suggestions = await analyzeConversationWithAI(data);
+      displayAISuggestions(suggestions);
+      updateStatus('AI analysis complete! Check suggestions below.', 'success');
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+      updateStatus('Conversation extracted, but AI analysis failed.', 'error');
     }
   }
 }
@@ -649,6 +680,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize dashboard button
   initializeDashboardButton();
+  
+  // Initialize AI suggestions panel
+  initializeAISuggestionsPanel();
+  
+  // Initialize collapsible sections
+  initializeCollapsibleSections();
 });
 
 // Handle messages from content script
@@ -887,6 +924,220 @@ function initializeDashboardButton() {
       chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     });
   }
+}
+
+// AI Analysis Functions
+async function analyzeConversationWithAI(conversationData) {
+  try {
+    const messages = conversationData.messages || [];
+    if (messages.length === 0) {
+      throw new Error('No messages to analyze');
+    }
+
+    // Prepare conversation context for AI
+    const conversationText = messages.map(msg => {
+      const timestamp = new Date(msg.createdAt).toLocaleString();
+      return `${msg.sender} (${timestamp}): ${msg.body || '[No text content]'}`;
+    }).join('\n');
+
+    const prompt = `You are a professional communication assistant for Fiverr freelancers. Analyze this conversation and provide 3 professional response suggestions for the freelancer.
+
+Conversation:
+${conversationText}
+
+Please provide 3 different professional response suggestions that:
+1. Are appropriate for the conversation context
+2. Maintain professional tone
+3. Are helpful and constructive
+4. Consider the client's needs and concerns
+5. Show expertise and reliability
+
+Format your response as JSON with this structure:
+{
+  "suggestions": [
+    {
+      "title": "Brief title for the response",
+      "response": "The actual response text",
+      "tone": "professional/helpful/empathetic/etc",
+      "use_case": "When to use this response"
+    }
+  ]
+}`;
+
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-70b-versatile',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+    
+    // Parse the JSON response
+    const suggestions = JSON.parse(aiResponse);
+    return suggestions.suggestions || [];
+    
+  } catch (error) {
+    console.error('AI Analysis Error:', error);
+    // Return fallback suggestions
+    return [
+      {
+        title: "Professional Follow-up",
+        response: "Thank you for your message. I'll review your requirements and get back to you with a detailed response shortly.",
+        tone: "professional",
+        use_case: "General acknowledgment"
+      },
+      {
+        title: "Clarification Request",
+        response: "I want to make sure I understand your needs correctly. Could you please provide more details about [specific aspect]?",
+        tone: "helpful",
+        use_case: "When you need more information"
+      },
+      {
+        title: "Solution Proposal",
+        response: "Based on your requirements, I can help you with this project. Here's what I propose: [your solution]",
+        tone: "confident",
+        use_case: "When you have a solution to offer"
+      }
+    ];
+  }
+}
+
+function displayAISuggestions(suggestions) {
+  const suggestionsContainer = document.getElementById('aiSuggestions');
+  const suggestionsPanel = document.getElementById('aiSuggestionsPanel');
+  
+  if (!suggestions || suggestions.length === 0) {
+    suggestionsContainer.innerHTML = '<div class="loading-suggestions">No suggestions available</div>';
+    return;
+  }
+
+  suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => `
+    <div class="suggestion-item" onclick="copySuggestion('${suggestion.response.replace(/'/g, "\\'")}')">
+      <div class="suggestion-title">${suggestion.title}</div>
+      <div class="suggestion-text">${suggestion.response}</div>
+      <div class="suggestion-meta" style="font-size: 10px; color: #666; margin-top: 4px;">
+        Tone: ${suggestion.tone} • ${suggestion.use_case}
+      </div>
+    </div>
+  `).join('');
+
+  // Show the suggestions panel
+  suggestionsPanel.style.display = 'block';
+  
+  // Auto-collapse after 10 seconds if not interacted with
+  setTimeout(() => {
+    if (!suggestionsPanel.classList.contains('user-interacted')) {
+      collapseSuggestionsPanel();
+    }
+  }, 10000);
+}
+
+function copySuggestion(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    updateStatus('Response copied to clipboard!', 'success');
+    
+    // Visual feedback
+    event.target.style.background = '#d4edda';
+    setTimeout(() => {
+      event.target.style.background = '';
+    }, 1000);
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
+    updateStatus('Failed to copy to clipboard', 'error');
+  });
+}
+
+function toggleSuggestionsPanel() {
+  const panel = document.getElementById('aiSuggestionsPanel');
+  const toggleBtn = document.getElementById('toggleSuggestions');
+  const content = panel.querySelector('.panel-content');
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggleBtn.textContent = '−';
+  } else {
+    content.style.display = 'none';
+    toggleBtn.textContent = '+';
+  }
+}
+
+function collapseSuggestionsPanel() {
+  const panel = document.getElementById('aiSuggestionsPanel');
+  const content = panel.querySelector('.panel-content');
+  const toggleBtn = document.getElementById('toggleSuggestions');
+  
+  content.style.display = 'none';
+  toggleBtn.textContent = '+';
+}
+
+// Collapsible sections functionality
+function toggleCollapsible(contentId) {
+  const content = document.getElementById(contentId);
+  const icon = event.currentTarget.querySelector('.collapsible-icon');
+  
+  if (content.classList.contains('active')) {
+    content.classList.remove('active');
+    icon.classList.remove('expanded');
+  } else {
+    content.classList.add('active');
+    icon.classList.add('expanded');
+  }
+}
+
+// Make toggleCollapsible globally available
+window.toggleCollapsible = toggleCollapsible;
+
+// Initialize AI suggestions panel
+function initializeAISuggestionsPanel() {
+  const toggleBtn = document.getElementById('toggleSuggestions');
+  const panel = document.getElementById('aiSuggestionsPanel');
+  
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSuggestionsPanel();
+    });
+  }
+  
+  // Mark panel as interacted when user clicks on it
+  if (panel) {
+    panel.addEventListener('click', () => {
+      panel.classList.add('user-interacted');
+    });
+  }
+}
+
+// Initialize collapsible sections
+function initializeCollapsibleSections() {
+  // Auto-expand contacts section if there are contacts
+  chrome.storage.local.get(['allContacts'], (result) => {
+    if (result.allContacts && result.allContacts.length > 0) {
+      const contactsContent = document.getElementById('contactsContent');
+      const contactsHeader = document.querySelector('[onclick*="contactsContent"]');
+      if (contactsContent && contactsHeader) {
+        contactsContent.classList.add('active');
+        contactsHeader.querySelector('.collapsible-icon').classList.add('expanded');
+      }
+    }
+  });
 }
 
 // Stop checking when popup closes
