@@ -1491,3 +1491,142 @@ function initializePostExtractionActions() {
 window.addEventListener('unload', () => {
   stopStatusChecking();
 });
+
+// Helper: resolve username for filenames
+function resolveUsername(callback) {
+  chrome.storage.local.get(['currentUsername', 'currentConversationUsername'], (result) => {
+    const username = result.currentUsername || result.currentConversationUsername || 'fiverr_user';
+    callback(username);
+  });
+}
+
+// Download helpers used by post-extraction buttons
+function downloadMarkdown() {
+  chrome.storage.local.get(['markdownContent'], (result) => {
+    if (!result.markdownContent) {
+      updateStatus('Please extract the conversation first.', true);
+      return;
+    }
+
+    resolveUsername((username) => {
+      const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      chrome.downloads.download({
+        url,
+        filename: `${username}/conversations/fiverr_conversation_${username}_${new Date().toISOString().split('T')[0]}.md`,
+        saveAs: false
+      }, (downloadId) => {
+        if (chrome.runtime.lastError || !downloadId) {
+          console.error('Download MD error:', chrome.runtime.lastError);
+          updateStatus('Failed to start Markdown download.', true);
+        } else {
+          updateStatus('Markdown download started.', false);
+        }
+      });
+    });
+  });
+}
+
+function downloadJson() {
+  chrome.storage.local.get(['jsonContent'], (result) => {
+    if (!result.jsonContent) {
+      updateStatus('Please extract the conversation first.', true);
+      return;
+    }
+
+    resolveUsername((username) => {
+      const blob = new Blob([JSON.stringify(result.jsonContent, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      chrome.downloads.download({
+        url,
+        filename: `${username}/conversations/${username}_conversation.json`,
+        saveAs: false
+      }, (downloadId) => {
+        if (chrome.runtime.lastError || !downloadId) {
+          console.error('Download JSON error:', chrome.runtime.lastError);
+          updateStatus('Failed to start JSON download.', true);
+        } else {
+          updateStatus('JSON download started.', false);
+        }
+      });
+    });
+  });
+}
+
+function viewMarkdown() {
+  chrome.storage.local.get(['markdownContent'], (result) => {
+    if (!result.markdownContent) {
+      updateStatus('Please extract the conversation first.', true);
+      return;
+    }
+    const blob = new Blob([result.markdownContent], { type: 'text/markdown' });
+    chrome.tabs.create({ url: URL.createObjectURL(blob) });
+  });
+}
+
+function viewJson() {
+  chrome.storage.local.get(['jsonContent'], (result) => {
+    if (!result.jsonContent) {
+      updateStatus('Please extract the conversation first.', true);
+      return;
+    }
+    const blob = new Blob([JSON.stringify(result.jsonContent, null, 2)], { type: 'application/json' });
+    chrome.tabs.create({ url: URL.createObjectURL(blob) });
+  });
+}
+
+// Improve error handling for attachment/preview downloads
+// Wrap chrome.downloads.download calls with callbacks to surface errors
+(function wrapAttachmentDownloadErrors(){
+  const origDisplayAttachments = displayAttachments;
+  displayAttachments = async function(messages){
+    await origDisplayAttachments(messages);
+    // Enhance existing buttons by re-binding click handlers with error checks
+    document.querySelectorAll('.attachment-item .download-btn:not(.preview-btn)').forEach((btn) => {
+      const onclick = btn.onclick;
+      btn.onclick = function(){
+        try {
+          // Call original handler which triggers chrome.downloads.download
+          const ret = onclick && onclick();
+          // Attempt to detect and report lastError shortly after
+          setTimeout(() => {
+            if (chrome.runtime.lastError) {
+              console.error('Attachment download error:', chrome.runtime.lastError);
+              updateStatus('Failed to start attachment download.', true);
+            }
+          }, 0);
+          return ret;
+        } catch (e) {
+          console.error('Attachment download click error:', e);
+          updateStatus('Failed to start attachment download.', true);
+        }
+      };
+    });
+  };
+})();
+
+(function wrapPreviewDownloadErrors(){
+  const origInit = initializePreviewModal;
+  initializePreviewModal = function(){
+    origInit();
+    const btn = document.getElementById('downloadFromPreviewBtn');
+    if (btn) {
+      const onclick = btn.onclick;
+      btn.onclick = function(){
+        try {
+          const ret = onclick && onclick();
+          setTimeout(() => {
+            if (chrome.runtime.lastError) {
+              console.error('Preview download error:', chrome.runtime.lastError);
+              updateStatus('Failed to start download from preview.', true);
+            }
+          }, 0);
+          return ret;
+        } catch (e) {
+          console.error('Preview download click error:', e);
+          updateStatus('Failed to start download from preview.', true);
+        }
+      };
+    }
+  };
+})();
